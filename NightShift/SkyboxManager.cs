@@ -50,7 +50,6 @@ namespace NightShift
         {
             if (skyCamera)
             {
-                skyCamera.transform.position = mainSceneryCamera.transform.position;
                 skyCamera.transform.rotation = mainSceneryCamera.transform.rotation;
                 // Rotate this correctly for SPH
                 if (EditorDriver.editorFacility == EditorFacility.VAB)
