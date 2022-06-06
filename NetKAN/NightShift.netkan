@@ -8,7 +8,7 @@ ksp_version_min: '1.8'
 ksp_version_max: '1.12'
 license: MIT
 resources:
-  homepage: INSERT HERE
+  homepage: https://forum.kerbalspaceprogram.com/index.php?/topic/208470-112x-night-shift
 tags:
   - plugin
   - editor
