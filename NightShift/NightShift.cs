@@ -16,12 +16,11 @@ namespace NightShift
         // Launcher Variables
         private static ApplicationLauncherButton launcher;
 
-        private readonly ApplicationLauncher.AppScenes VisibleInScenes =
-            ApplicationLauncher.AppScenes.VAB |
-            ApplicationLauncher.AppScenes.SPH;
+    private const ApplicationLauncher.AppScenes VisibleInScenes = ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH;
+    
+    private readonly Texture2D _iconDay = GameDatabase.Instance.GetTexture("NightShift/Icons/Day", false);
+    private readonly Texture2D _iconNight = GameDatabase.Instance.GetTexture("NightShift/Icons/Night", false);
 
-        private readonly Texture2D IconDay = GameDatabase.Instance.GetTexture("NightShift/Textures/Day", false);
-        private readonly Texture2D IconNight = GameDatabase.Instance.GetTexture("NightShift/Textures/Night", false);
 
         public void Start()
         {
