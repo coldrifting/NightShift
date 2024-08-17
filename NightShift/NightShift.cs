@@ -49,7 +49,7 @@ public class NightShift : MonoBehaviour
         
         if (Input.GetKeyDown(KeyCode.N))
         {
-            //ToggleDayNight();
+            ToggleDayNight();
         }
     }
 
