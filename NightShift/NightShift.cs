@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
-using Debug = UnityEngine.Debug;
 
 namespace NightShift;
 
