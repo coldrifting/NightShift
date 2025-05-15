@@ -7,28 +7,31 @@ namespace NightShift;
 
 public static class Tools
 {
-    
-    
     public static bool IsSph => EditorDriver.editorFacility == EditorFacility.SPH;
     public static int Level => GetEditorLevel();
 
     private static int GetEditorLevel()
     {
-        Transform editorRoot = GetRootInteriorTransform();
-        if (!editorRoot)
-            return 3;
-
-        return editorRoot.name switch
+        return EditorDriver.editorFacility switch
         {
-            "SPHmodern" or "VABmodern" => 3,
-            "SPHlvl1" or "VABlvl2" => 1,
-            "SPHlvl2" or "VABlvl3" => 2,
+            EditorFacility.SPH => (int)(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.SpaceplaneHangar) * 2) + 1,
+            EditorFacility.VAB => (int)(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.VehicleAssemblyBuilding) * 2) + 1,
             _ => 3
         };
     }
+    
+    public static TimeOfDay GetTimeOfDay()
+    {
+        double time = GetLocalTime();
 
-    public static bool IsDaytime => GetLocalTime() is > 0.22 and < 0.78;
-
+        return time switch
+        {
+            > 0.30 and < 0.70 => TimeOfDay.Day,
+            < 0.22 or  > 0.78 => TimeOfDay.Night,
+            _ => TimeOfDay.Twilight
+        };
+    }
+    
     private static double GetLocalTime()
     {
         if (FlightDriver.Pause)

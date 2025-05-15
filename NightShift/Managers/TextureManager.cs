@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace NightShift;
+namespace NightShift.Managers;
 
 // Adjusts textures of objects
 public class TextureManager : IDayNightManager
@@ -149,8 +149,10 @@ public class TextureManager : IDayNightManager
         TextureCache.BuildCache(_meshLookup);
     }
 
-    public void Switch(bool isDay)
+    public void Apply(TimeOfDay timeOfDay)
     {
+        bool isDay = timeOfDay == TimeOfDay.Day;
+        
         foreach ((MeshRenderer mr, string id, int texType, int matIndex) in _meshLookup)
         {
             if (matIndex >= mr.materials.Length)

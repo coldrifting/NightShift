@@ -1,7 +1,7 @@
-﻿namespace NightShift;
+﻿namespace NightShift.Managers;
 
 public interface IDayNightManager
 {
     public void Init();
-    public void Switch(bool isDay);
+    public void Apply(TimeOfDay timeOfDay);
 }

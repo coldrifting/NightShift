@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace NightShift;
+namespace NightShift.Managers;
 
 // Adjusts object visibility, animation playback, and adds new objects when needed
 public class ObjectManager : IDayNightManager
@@ -16,25 +16,19 @@ public class ObjectManager : IDayNightManager
     {
         Init();
     }
-
     
     public void Init()
     {
         _objects.Clear();
         _objectReset.Clear();
         _objectAnim.Clear();
-
-        Transform nst = GameObject.Find("NightShift").transform;
-        Transform lightsTransform = nst.Find("SPH_Lights_LVL3");
-        if (lightsTransform)
-        {
-            NewSph3Lights = lightsTransform.gameObject;
-        }
-        else
+        
+        var sphLvl3MainBuilding = GameObject.Find("SPHmodern/SPH_interior_modern/SPH_Interior_Geometry/model_sph_interior_main_v16");
+        if (sphLvl3MainBuilding)
         {
             NewSph3Lights = GameDatabase.Instance.GetModel("NightShift/Assets/Lights_SPH3");
             NewSph3Lights.name = "SPH_Lights_LVL3";
-            NewSph3Lights.transform.parent = nst;
+            NewSph3Lights.transform.parent = sphLvl3MainBuilding.transform;
         }
         
         Transform interiorRoot = Tools.GetRootInteriorTransform();
@@ -96,8 +90,10 @@ public class ObjectManager : IDayNightManager
         }
     }
     
-    public void Switch(bool isDay)
+    public void Apply(TimeOfDay timeOfDay)
     {
+        bool isDay = timeOfDay == TimeOfDay.Day;
+        
         // Enable objects
         foreach (GameObject gameObject in _objects)
         {

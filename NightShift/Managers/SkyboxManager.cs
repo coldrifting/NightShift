@@ -1,7 +1,8 @@
 ﻿using System;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
-namespace NightShift;
+namespace NightShift.Managers;
 
 // Most of this skybox code comes from the LightsOut mod.
 // Big thanks to that mod's authors for their helpful source code.
@@ -10,11 +11,10 @@ namespace NightShift;
 // so we can edit the rotation of the skybox
 internal class SkyboxManager : IDayNightManager
 {
+    private Material _daySky;
+    private Material _twilightSky;
     private Material _nightSky;
-        
-    private Camera _nightskyCamera;
-    private Camera _sceneryCamera;
-        
+
     private static readonly int MainTex = Shader.PropertyToID("_MainTex");
     private static readonly int UpTex = Shader.PropertyToID("_UpTex");
     private static readonly int BackTex = Shader.PropertyToID("_BackTex");
@@ -23,13 +23,15 @@ internal class SkyboxManager : IDayNightManager
     private static readonly int RightTex = Shader.PropertyToID("_RightTex");
     private static readonly int DownTex = Shader.PropertyToID("_DownTex");
 
+
     public SkyboxManager()
     {
         Init();
     }
 
-    private static Material BuildSkybox()
+    private static Material BuildNightSkybox()
     {
+    
         Texture2D[] cube = new Texture2D[6];
         
         MeshRenderer[] renders = GalaxyCubeControl.Instance.transform.GetComponentsInChildren<MeshRenderer>();
@@ -57,60 +59,78 @@ internal class SkyboxManager : IDayNightManager
                     break;
             }
         }
-        
-        Material output = new(RenderSettings.skybox.shader)
+            
+        Material output = new Material(RenderSettings.skybox.shader)
         {
             name = "Skybox (Night)",
             mainTexture = new Cubemap(cube[0].width, TextureFormat.RGB24, true),
             color = Color.white
         };
+        
+        // Realign a
         output.SetTexture(UpTex, cube[0]);
-        output.SetTexture(BackTex, cube[1]);
-        output.SetTexture(LeftTex, cube[2]);
-        output.SetTexture(FrontTex, cube[3]);
-        output.SetTexture(RightTex, cube[4]);
+        output.SetTexture(BackTex, cube[3]);
+        output.SetTexture(LeftTex, cube[4]);
+        output.SetTexture(FrontTex, cube[1]);
+        output.SetTexture(RightTex, cube[2]);
         output.SetTexture(DownTex, cube[5]);
+
+        RenderSettings.skybox = output;
         
         return output;
+    }
+    
+    private static Material BuildSkybox(string cubeMapName)
+    {
+        var top = GameDatabase.Instance.GetTexture($"NightShift/Cubemaps/{cubeMapName}/top", false);
+        var side = GameDatabase.Instance.GetTexture($"NightShift/Cubemaps/{cubeMapName}/side", false);
+        var bottom = GameDatabase.Instance.GetTexture($"NightShift/Cubemaps/{cubeMapName}/bottom", false);
+        
+        Material output = new Material(RenderSettings.skybox.shader)
+        {
+            name = $"Skybox ({cubeMapName})",
+            mainTexture = new Cubemap(side.width, TextureFormat.RGB24, false),
+            color = Color.white
+        };
+        
+        output.SetTexture(UpTex, top);
+        output.SetTexture(BackTex, side);
+        output.SetTexture(LeftTex, side);
+        output.SetTexture(FrontTex, side);
+        output.SetTexture(RightTex, side);
+        output.SetTexture(DownTex, bottom);
+        
+        return output;
+    }
+
+    private static Material GetDefaultSkybox()
+    {
+        if (RenderSettings.skybox.name != "Sunny3 Skybox")
+        {
+            Material[] materials = Object.FindObjectsOfType<Material>();
+            foreach (var material in materials)
+            {
+                if (material.name == "Sunny3 Skybox")
+                {
+                    return material;
+                }
+            }
+        }
+        
+        return new(RenderSettings.skybox);
     }
     
     public void Init()
     {
         try
         {
-            Transform nst = GameObject.Find("NightShift").transform;
-            Transform cameraTransform = nst.Find("NightSkyCam");
-            if (cameraTransform)
-            {
-                _nightskyCamera = cameraTransform.GetComponent<Camera>();
-            }
-            else 
-            {
-                _nightSky = BuildSkybox();
-                _nightskyCamera = new GameObject("NightSkyCam").AddComponent<Camera>();
-                _nightskyCamera.transform.parent = GameObject.Find("NightShift").transform;
-            }
+            _daySky = GetDefaultSkybox();
             
-            GameObject sceneryCamGameObject = 
-                GameObject.Find("/VAB camera pivot/Main Camera/sceneryCam") ??
-                GameObject.Find("/SPH camera pivot/Main Camera/sceneryCam");
-
-            if (!sceneryCamGameObject)
-            {
-                Debug.Log("[NightShift] Could not find main scenery camera for skybox rotation");
-                return;
-            }
+            _twilightSky = BuildSkybox("Twilight");
             
-            _sceneryCamera = sceneryCamGameObject.GetComponent<Camera>();
-            if (!_sceneryCamera)
-                return;
+            _nightSky = BuildNightSkybox();
             
-            _nightskyCamera.depth = _sceneryCamera.depth - 1;
-            _nightskyCamera.clearFlags = CameraClearFlags.Skybox;
-            _nightskyCamera.cullingMask = 0;
-                
-            Skybox skybox = _nightskyCamera.gameObject.AddComponent<Skybox>();
-            skybox.material = _nightSky;
+            RenderSettings.skybox = _daySky;
         }
         catch (Exception e)
         {
@@ -119,46 +139,13 @@ internal class SkyboxManager : IDayNightManager
         }
     }
 
-    public void Switch(bool isDay)
+    public void Apply(TimeOfDay timeOfDay)
     {
-        if (isDay)
+        RenderSettings.skybox = timeOfDay switch
         {
-            if (!_sceneryCamera) 
-                return;
-            
-            _sceneryCamera.clearFlags = CameraClearFlags.Skybox;
-        }
-        else
-        {
-            if (!_sceneryCamera) 
-                return;
-            
-            _sceneryCamera.clearFlags = CameraClearFlags.Nothing;
-        }
-    }
-
-    public void Update(bool isDay = true)
-    {
-        if (!_nightskyCamera || isDay) 
-            return;
-
-        if (_nightskyCamera is null || _sceneryCamera is null) 
-            return;
-            
-        _nightskyCamera.transform.position = _sceneryCamera.transform.position;
-        _nightskyCamera.transform.rotation = _sceneryCamera.transform.rotation;
-
-        // Rotation order: Z, X, Y
-        // x rotates about gravity axis
-        // y rotates about sun's rotation axis
-        // z rotates about sun's radial axis (don't know angle)
-        if (EditorDriver.editorFacility == EditorFacility.SPH)
-        {
-            _nightskyCamera.transform.Rotate(-30, 270, -90, Space.World);
-        }
-        else
-        {
-            _nightskyCamera.transform.Rotate(-90, 180, 0, Space.World);
-        }
+            TimeOfDay.Twilight => _twilightSky,
+            TimeOfDay.Night => _nightSky,
+            _ => _daySky
+        };
     }
 }

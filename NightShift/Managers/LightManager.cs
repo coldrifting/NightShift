@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace NightShift;
+namespace NightShift.Managers;
 
 // Adjusts Ambient fog and light properties
 public class LightManager : IDayNightManager
@@ -68,10 +68,21 @@ public class LightManager : IDayNightManager
         }
     }
 
-    public void Switch(bool isDay)
+    public void Apply(TimeOfDay timeOfDay)
     {
+        bool isDay = timeOfDay == TimeOfDay.Day;
+        
         // Fog Color
-        RenderSettings.fogColor = isDay ? new(0.5647f, 0.6784f, 0.7176f, 1) : Color.black;
+        RenderSettings.fogColor = timeOfDay switch
+        {
+            TimeOfDay.Day => new(0.5647f, 0.6784f, 0.7176f, 1),
+            TimeOfDay.Twilight => new(0.32f, 0.2f, 0.16f, 1),
+            TimeOfDay.Night => Color.black,
+            _ => Color.black
+        };
+        
+        // Fog Start Dist
+        RenderSettings.fogStartDistance = timeOfDay == TimeOfDay.Day ? 400 : 200;
         
         // Enable Ambient light on exterior meshes
         foreach (MeshRenderer mr in _objectAmbientOcclusion)
@@ -82,11 +93,11 @@ public class LightManager : IDayNightManager
             // Ground is special
             if (mr.name == "ksc_terrain")
             {
-                mr.realtimeLightmapIndex = isDay ? -1 : 0;
+                mr.realtimeLightmapIndex = !isDay ? 0 : -1;
             }
             else
             {
-                mr.lightmapIndex = isDay ? -1 : 0;
+                mr.lightmapIndex = !isDay ? 0 : -1;
             }
         }
     }

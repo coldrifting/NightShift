@@ -73,6 +73,7 @@
     <Compile Include="Managers\SkyboxManager.cs" />
     <Compile Include="Managers\TextureManager.cs" />
     <Compile Include="TextureCache.cs" />
+    <Compile Include="TimeOfDay.cs" />
     <Compile Include="Tools.cs" />
     <Compile Include="NightShift.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

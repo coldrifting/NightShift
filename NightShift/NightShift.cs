@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
+using NightShift.Managers;
 
 namespace NightShift;
 
@@ -13,17 +14,19 @@ public class NightShift : MonoBehaviour
     // Launcher Variables
     private ApplicationLauncherButton _launcher;
 
-    private bool IsDayMode { get; set; }
+    private TimeOfDay TimeOfDay { get; set; }
 
     private const ApplicationLauncher.AppScenes VisibleInScenes = ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH;
     
     private readonly Texture2D _iconDay = GameDatabase.Instance.GetTexture("NightShift/Icons/Day", false);
+    private readonly Texture2D _iconTwilight = GameDatabase.Instance.GetTexture("NightShift/Icons/Twilight", false);
     private readonly Texture2D _iconNight = GameDatabase.Instance.GetTexture("NightShift/Icons/Night", false);
 
+    private KeyBinding _cycleTimeOfDay;
 
     public void Start()
     {
-        IsDayMode = Tools.IsDaytime;
+        _cycleTimeOfDay = new(KeyCode.N, ControlTypes.EDITOR_GIZMO_TOOLS | ControlTypes.KEYBOARDINPUT);
         
         _managers.Add(new LightManager());
         _managers.Add(new SkyboxManager());
@@ -37,29 +40,19 @@ public class NightShift : MonoBehaviour
         // Callback for editor switching
         GameEvents.onEditorRestart.Add(Switched);
 
-        // Wait before applying settings to prevent dark icon bug
-        StartCoroutine(WaitAndUpdateLighting(0.05f));
+        TimeOfDay = Tools.GetTimeOfDay();
+
+        foreach (var mgmt in _managers)
+        {
+            mgmt.Apply(TimeOfDay);
+        }
     }
 
     public void Update()
     {
-        if (!Input.GetKey(KeyCode.LeftAlt)) 
-            return;
-        
-        if (Input.GetKeyDown(KeyCode.N))
+        if (_cycleTimeOfDay.GetKeyDown())
         {
             ToggleDayNight();
-        }
-    }
-
-    public void LateUpdate()
-    {
-        foreach (var m in _managers)
-        {
-            if (m is SkyboxManager skyboxManager)
-            {
-                skyboxManager.Update(IsDayMode);
-            }
         }
     }
 
@@ -73,33 +66,64 @@ public class NightShift : MonoBehaviour
 
     private void Switched()
     {
-        //Debug.Log("[NightShift] Switched between VAB/SPH");
-
-        // Wait a tiny bit before reapplying lighting
         foreach (var mgmt in _managers)
         {
             mgmt.Init();
+            mgmt.Apply(TimeOfDay);
         }
         
         StartCoroutine(WaitAndUpdateLighting(0.05f));
+    }
+    
+    public Texture2D FlipTexture(Texture2D original, bool vertical = true)
+    {
+        Texture2D flipped = new Texture2D(original.width, original.height);
+
+        int xN = original.width;
+        int yN = original.height;
+
+
+        for (int i = 0; i < xN; i++)
+        {
+            for (int j = 0; j < yN; j++)
+            {
+                if (vertical)
+                {
+                    flipped.SetPixel(j, xN - i - 1, original.GetPixel(j, i));
+                }
+                else
+                {
+                    flipped.SetPixel(xN - i - 1, j, original.GetPixel(i, j));
+                }
+            }
+        }
+        flipped.Apply();
+
+        return flipped;
     }
 
     private void Refresh()
     {
         foreach (IDayNightManager manager in _managers)
         {
-            if (manager is LightManager lm)
-            {
-                lm.Init();
-            }
-            
-            manager.Switch(IsDayMode);
+            manager.Apply(TimeOfDay);
         }
         
         // Update Launcher Icon
-        _launcher?.SetTexture(IsDayMode 
-            ? _iconDay 
-            : _iconNight);
+        Texture2D icon = GetAppIcon(TimeOfDay);
+
+        _launcher?.SetTexture(icon);
+    }
+
+    private Texture2D GetAppIcon(TimeOfDay timeOfDay)
+    {
+        return timeOfDay switch
+        {
+            TimeOfDay.Day => _iconDay,
+            TimeOfDay.Twilight => _iconTwilight,
+            TimeOfDay.Night => _iconNight,
+            _ => _iconDay
+        };
     }
 
     private IEnumerator WaitAndUpdateLighting(float timeToWait = 0.0f)
@@ -111,13 +135,14 @@ public class NightShift : MonoBehaviour
 
     private void AddLauncher()
     {
-        if (ApplicationLauncher.Ready && _launcher == null)
+        if (ApplicationLauncher.Ready && !_launcher)
         {
+            Texture2D icon = GetAppIcon(TimeOfDay);
             _launcher = ApplicationLauncher.Instance.AddModApplication(
                 ToggleDayNight, null,
                 null, null,
                 null, null,
-                VisibleInScenes, _iconDay
+                VisibleInScenes, icon
             );
         }
 
@@ -134,7 +159,7 @@ public class NightShift : MonoBehaviour
 
     private void ToggleDayNight()
     {
-        IsDayMode = !IsDayMode;
+        TimeOfDay = TimeOfDay.Cycle();
         Refresh();
 
         // Un-Click Icon
