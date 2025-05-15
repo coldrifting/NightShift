@@ -50,7 +50,7 @@ public class NightShift : MonoBehaviour
 
     public void Update()
     {
-        if (_cycleTimeOfDay.GetKeyDown())
+        if (_cycleTimeOfDay.GetKeyDown() && Input.GetKey(KeyCode.LeftAlt))
         {
             ToggleDayNight();
         }
@@ -73,33 +73,6 @@ public class NightShift : MonoBehaviour
         }
         
         StartCoroutine(WaitAndUpdateLighting(0.05f));
-    }
-    
-    public Texture2D FlipTexture(Texture2D original, bool vertical = true)
-    {
-        Texture2D flipped = new Texture2D(original.width, original.height);
-
-        int xN = original.width;
-        int yN = original.height;
-
-
-        for (int i = 0; i < xN; i++)
-        {
-            for (int j = 0; j < yN; j++)
-            {
-                if (vertical)
-                {
-                    flipped.SetPixel(j, xN - i - 1, original.GetPixel(j, i));
-                }
-                else
-                {
-                    flipped.SetPixel(xN - i - 1, j, original.GetPixel(i, j));
-                }
-            }
-        }
-        flipped.Apply();
-
-        return flipped;
     }
 
     private void Refresh()
