@@ -111,6 +111,7 @@
     <Compile Include="Data\LightInfo.cs" />
     <Compile Include="Data\ShaderInfo.cs" />
     <Compile Include="Data\MeshTextureInfo.cs" />
+    <Compile Include="Data\TimeMode.cs" />
     <Compile Include="Data\TimeOfDay.cs" />
     <Compile Include="EditorTimeDisplay.cs" />
     <Compile Include="Managers\Interface\IDayNightManager.cs" />
