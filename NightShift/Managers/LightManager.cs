@@ -1,104 +1,70 @@
 ﻿using System.Collections.Generic;
+using NightShift.Data;
+using NightShift.Managers.Interface;
 using UnityEngine;
 
 namespace NightShift.Managers;
 
-// Adjusts Ambient fog and light properties
+// Adjusts Lights
 public class LightManager : IDayNightManager
 {
-    private readonly List<MeshRenderer> _objectAmbientOcclusion = [];
-    
-    public LightManager()
-    {
-        Init();
-    }
+    private readonly List<Material> _splashMaterials = [];
+    private readonly List<LightCache> _lights = [];
+
+    private static readonly int TintColor = Shader.PropertyToID("_TintColor");
+    private readonly Color _defaultSplashColor = new(0.375f, 0.375f, 0.375f, 0.25f);
     
     public void Init()
     {
-        _objectAmbientOcclusion.Clear();
-        
-        Transform sceneryRoot = Tools.GetRootExteriorTransform();
-        Transform interiorRoot = Tools.GetRootInteriorTransform();
-        
-        // Find objects that will need to have their ambient occlusion removed
-        Queue<Transform> l = new();
-        if (!sceneryRoot)
+        for (int i = 1; i <= 6; i++)
         {
-            return;
-        }
-        
-        l.Enqueue(sceneryRoot);
-        while (l.Count > 0)
-        {
-            Transform cur = l.Dequeue();
-
-            if (cur.gameObject.GetComponent<MeshRenderer>() is { } mr)
+            string path = $"SPH_interior_modern/SPH_Interior_Geometry/model_sph_interior_lights_v16/Component_744_1/rearWindowLightSplashes/Mesh{i}";
+            GameObject splashFx = GameObject.Find(path);
+            if (splashFx)
             {
-                _objectAmbientOcclusion.Add(mr);
-            }
-            
-            foreach (Transform t in cur)
-            {
-                l.Enqueue(t);
+                MeshRenderer mr = splashFx.GetComponent<MeshRenderer>();
+                if (mr)
+                {
+                    var mat = mr.material;
+                    if (mat)
+                    {
+                        _splashMaterials.Add(mat);
+                    }
+                }
             }
         }
+        
+        List<LightInfo> lightInfo =
+        [
+            new(EditorFacility.SPH, 3, 8f, "Lighting_Realtime/Realtime_ExteriorSun"),
+            new(EditorFacility.SPH, 3, 0.3f, "Lighting_Realtime/Realtime_SpotlightWindow"),
+            new(EditorFacility.SPH, 2, 8f, "Editors_DayLights/ExteriorSun"),
+            new(EditorFacility.SPH, 1, 8f, "Editors_DayLights/ExteriorSun"),
 
-        switch (Tools.Level)
-        {
-            case 3:
-            _objectAmbientOcclusion.TryAddFromPath(interiorRoot,
-                Tools.IsSph
-                    ? "SPH_interior_modern/model_sph_exterior_ground_v46n"
-                    : "VAB_interior_modern/model_vab_exterior_ground_v46n");
-                break;
-            
-            case 2:
-            _objectAmbientOcclusion.TryAddFromPath(interiorRoot,
-                Tools.IsSph
-                    ? "SPH_lev2_groundPlane"
-                    : "VAB_lev2_groundPlane");
-                break;
-            
-            case 1:
-            _objectAmbientOcclusion.TryAddFromPath(interiorRoot,
-                Tools.IsSph
-                    ? "SPH_lev1_ground"
-                    : "VAB_lev1_interior/VAB_lev1_groundPlane");
-                break;
-        }
+            new(EditorFacility.VAB, 3, 5f, "VAB_interior_modern/Day Lights/SpotlightSun"),
+            new(EditorFacility.VAB, 2, 5f, "Day Lights/SpotlightSun"),
+            new(EditorFacility.VAB, 1, 5f, "Day Lights/SpotlightSun"),
+        ];
+        
+        lightInfo.Initialize(_lights);
     }
 
-    public void Apply(TimeOfDay timeOfDay)
+    public void Apply(double currentTime)
     {
-        bool isDay = timeOfDay == TimeOfDay.Day;
+        bool isNotNight = Time.GetTimeOfDay(currentTime) != TimeOfDay.Night;
         
-        // Fog Color
-        RenderSettings.fogColor = timeOfDay switch
+        foreach (LightCache lightData in _lights)
         {
-            TimeOfDay.Day => new(0.5647f, 0.6784f, 0.7176f, 1),
-            TimeOfDay.Twilight => new(0.32f, 0.2f, 0.16f, 1),
-            TimeOfDay.Night => Color.black,
-            _ => Color.black
-        };
-        
-        // Fog Start Dist
-        RenderSettings.fogStartDistance = timeOfDay == TimeOfDay.Day ? 400 : 200;
-        
-        // Enable Ambient light on exterior meshes
-        foreach (MeshRenderer mr in _objectAmbientOcclusion)
+            lightData.Light.gameObject.SetActive(isNotNight);
+            if (isNotNight)
+            {
+                lightData.Light.intensity = lightData.Intensity * AmbientLight.GetLightIntensityFactor(currentTime);
+            }
+        }
+
+        foreach (Material splashMaterial in _splashMaterials)
         {
-            if (!mr)
-                continue;
-            
-            // Ground is special
-            if (mr.name == "ksc_terrain")
-            {
-                mr.realtimeLightmapIndex = !isDay ? 0 : -1;
-            }
-            else
-            {
-                mr.lightmapIndex = !isDay ? 0 : -1;
-            }
+            splashMaterial.SetColor(TintColor, _defaultSplashColor * AmbientLight.GetLightIntensityFactor(currentTime));
         }
     }
 }

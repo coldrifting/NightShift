@@ -1,58 +1,168 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
+using NightShift.Data;
 using NightShift.Managers;
+using NightShift.Managers.Interface;
+using NightShift.Utils;
 
 namespace NightShift;
+
+public enum TimeMode
+{
+    ReReWind,
+    Rewind,
+    Back,
+    Pause,
+    Forward,
+    FastForward,
+    FastFastForward,
+}
+
+public static class TimeModeExt
+{
+    public static T Prev<T>(this T src) where T : struct
+    {
+        if (!typeof(T).IsEnum) throw new ArgumentException($"Argument {typeof(T).FullName} is not an Enum");
+
+        T[] arr = (T[])Enum.GetValues(src.GetType());
+        int j = Array.IndexOf(arr, src) - 1;
+        return (-1==j) ? arr[0] : arr[j];            
+    }
+    
+    public static T Next<T>(this T src) where T : struct
+    {
+        if (!typeof(T).IsEnum) throw new ArgumentException($"Argument {typeof(T).FullName} is not an Enum");
+
+        T[] arr = (T[])Enum.GetValues(src.GetType());
+        int j = Array.IndexOf(arr, src) + 1;
+        return (arr.Length==j) ? arr[arr.Length - 1] : arr[j];            
+    }
+}
 
 [KSPAddon(KSPAddon.Startup.EditorAny, false)]
 public class NightShift : MonoBehaviour
 {
-    private readonly List<IDayNightManager> _managers = [];
-
-    // Launcher Variables
     private ApplicationLauncherButton _launcher;
+    private readonly List<IDayNightManager> _managers = [];
+    private EditorTimeDisplay _editorTimeDisplay;
 
-    private TimeOfDay TimeOfDay { get; set; }
-
-    private const ApplicationLauncher.AppScenes VisibleInScenes = ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH;
-    
-    private readonly Texture2D _iconDay = GameDatabase.Instance.GetTexture("NightShift/Icons/Day", false);
-    private readonly Texture2D _iconTwilight = GameDatabase.Instance.GetTexture("NightShift/Icons/Twilight", false);
-    private readonly Texture2D _iconNight = GameDatabase.Instance.GetTexture("NightShift/Icons/Night", false);
-
-    private KeyBinding _cycleTimeOfDay;
-
-    public void Start()
+     // TODO - Poll periodically for changes
+    private double _currentTime = 0.5;
+    private double CurrentTime
     {
-        _cycleTimeOfDay = new(KeyCode.N, ControlTypes.EDITOR_GIZMO_TOOLS | ControlTypes.KEYBOARDINPUT);
+        get => _currentTime;
+        set => _currentTime = (value + 1) % 1.0;
+    }
+
+    private const ControlTypes LockMask = ControlTypes.EDITOR_GIZMO_TOOLS | ControlTypes.KEYBOARDINPUT;
+    private KeyBinding _cycleTimeOfDay;
+    
+    private KeyBinding _setVisualTimeBack;
+    private KeyBinding _setVisualTimeForward;
+    private KeyBinding _setVisualTimeStop;
+
+    private TimeMode _timeMode = TimeMode.Pause;
+    private double _timeScale = 0.0625;
+
+    private Coroutine _timeAdvance = null;
+
+    public IEnumerator Start()
+    {
+        _cycleTimeOfDay = new(KeyCode.N, LockMask);
+
+        _setVisualTimeBack = new(KeyCode.Comma, LockMask);
+        _setVisualTimeForward = new(KeyCode.Period, LockMask);
+        _setVisualTimeStop = new(KeyCode.Slash, LockMask);
         
-        _managers.Add(new LightManager());
         _managers.Add(new SkyboxManager());
+        _managers.Add(new AmbientManager());
+        _managers.Add(new LightManager());
         _managers.Add(new ObjectManager());
-        _managers.Add(new TextureManager());
+        _managers.Add(new WindowManager());
         
         // Add the launcher
         GameEvents.onGUIApplicationLauncherReady.Add(AddLauncher);
         GameEvents.onGUIApplicationLauncherDestroyed.Add(RemoveLauncher);
         
         // Callback for editor switching
-        GameEvents.onEditorRestart.Add(Switched);
+        GameEvents.onEditorRestart.Add(OnStartup);
 
-        TimeOfDay = Tools.GetTimeOfDay();
+        _editorTimeDisplay = new();
+        
+        CurrentTime = Time.GetTime();
 
-        foreach (var mgmt in _managers)
+        yield return new WaitForSeconds(0.1f);
+        
+        Init();
+        Refresh();
+                    
+        _timeAdvance = StartCoroutine(AdvanceTime());
+    }
+
+    public void Init()
+    {
+        foreach (var manager in _managers)
         {
-            mgmt.Apply(TimeOfDay);
+            manager.Init();
+        }
+    }
+    
+    public void Apply(double timeOfDay)
+    {
+        foreach (var manager in _managers)
+        {
+            manager.Apply(timeOfDay);
         }
     }
 
     public void Update()
     {
-        if (_cycleTimeOfDay.GetKeyDown() && Input.GetKey(KeyCode.LeftAlt))
+        if (Input.GetKey(KeyCode.LeftAlt))
         {
-            ToggleDayNight();
+            if (_cycleTimeOfDay.GetKeyDown())
+            {
+                CycleTimeOfDay();
+            }
+            else if (_setVisualTimeStop.GetKeyDown())
+            {
+                _timeMode = TimeMode.Pause;
+            }
+            else if (_setVisualTimeBack.GetKeyDown())
+            {
+                _timeMode = _timeMode.Prev();
+            }
+            else if (_setVisualTimeForward.GetKeyDown())
+            {
+                _timeMode = _timeMode.Next();
+            }
+        }
+    }
+
+    private IEnumerator AdvanceTime()
+    {
+        while (true)
+        {  
+            CurrentTime = _timeMode switch
+            {
+                TimeMode.ReReWind => CurrentTime - UnityEngine.Time.deltaTime * _timeScale * 4,
+                TimeMode.Rewind => CurrentTime - UnityEngine.Time.deltaTime * _timeScale * 2,
+                TimeMode.Back => CurrentTime - UnityEngine.Time.deltaTime * _timeScale,
+                TimeMode.Forward => CurrentTime + UnityEngine.Time.deltaTime * _timeScale,
+                TimeMode.FastForward => CurrentTime + UnityEngine.Time.deltaTime * _timeScale * 2,
+                TimeMode.FastFastForward => CurrentTime + UnityEngine.Time.deltaTime * _timeScale * 4,
+                _ => CurrentTime
+            };
+            
+            _editorTimeDisplay.Update(_timeMode, CurrentTime);
+            if (_timeMode != TimeMode.Pause)
+            {
+                Refresh();
+            }
+            
+            yield return new WaitForEndOfFrame();
         }
     }
 
@@ -60,62 +170,55 @@ public class NightShift : MonoBehaviour
     {
         GameEvents.onGUIApplicationLauncherReady.Remove(AddLauncher);
         GameEvents.onGUIApplicationLauncherDestroyed.Remove(RemoveLauncher);
-        GameEvents.onEditorRestart.Remove(Switched);
+        GameEvents.onEditorRestart.Remove(OnStartup);
         RemoveLauncher();
     }
 
-    private void Switched()
+    private void OnStartup()
     {
-        foreach (var mgmt in _managers)
-        {
-            mgmt.Init();
-            mgmt.Apply(TimeOfDay);
-        }
+        Init();
         
-        StartCoroutine(WaitAndUpdateLighting(0.05f));
+        StartCoroutine(WaitThenRefresh());
+    }
+
+    private IEnumerator WaitThenRefresh(float timeToWait = 0.1f)
+    {
+        yield return new WaitForSeconds(timeToWait);
+
+        Refresh();
     }
 
     private void Refresh()
     {
-        foreach (IDayNightManager manager in _managers)
-        {
-            manager.Apply(TimeOfDay);
-        }
+        Apply(CurrentTime);
         
         // Update Launcher Icon
-        Texture2D icon = GetAppIcon(TimeOfDay);
-
+        Texture2D icon = GetAppIcon();
         _launcher?.SetTexture(icon);
     }
 
-    private Texture2D GetAppIcon(TimeOfDay timeOfDay)
+    private Texture2D GetAppIcon()
     {
-        return timeOfDay switch
+        return Time.GetTimeOfDay(CurrentTime) switch
         {
-            TimeOfDay.Day => _iconDay,
-            TimeOfDay.Twilight => _iconTwilight,
-            TimeOfDay.Night => _iconNight,
-            _ => _iconDay
+            TimeOfDay.Dawn => Constants.AppIconDawn,
+            TimeOfDay.Day => Constants.AppIconDay,
+            TimeOfDay.Dusk => Constants.AppIconDusk,
+            TimeOfDay.Night => Constants.AppIconNight,
+            _ => Constants.AppIconDay
         };
-    }
-
-    private IEnumerator WaitAndUpdateLighting(float timeToWait = 0.0f)
-    {
-        yield return new WaitForSeconds(timeToWait);
-        
-        Refresh();
     }
 
     private void AddLauncher()
     {
         if (ApplicationLauncher.Ready && !_launcher)
         {
-            Texture2D icon = GetAppIcon(TimeOfDay);
+            Texture2D icon = GetAppIcon();
             _launcher = ApplicationLauncher.Instance.AddModApplication(
-                ToggleDayNight, null,
+                CycleTimeOfDay, null,
                 null, null,
                 null, null,
-                VisibleInScenes, icon
+                ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH, icon
             );
         }
 
@@ -130,12 +233,34 @@ public class NightShift : MonoBehaviour
         _launcher = null;
     }
 
-    private void ToggleDayNight()
+    private void CycleTimeOfDay()
     {
-        TimeOfDay = TimeOfDay.Cycle();
+        CurrentTime = Time.NextTimeOfDay(CurrentTime);
+        
         Refresh();
 
         // Un-Click Icon
         _launcher?.SetFalse();
+    }
+
+    public static void Log(string msg)
+    {
+        Debug.Log("[NightShift] " + msg);
+    }
+
+    public static void Warn(string msg)
+    {
+        Debug.LogWarning("[NightShift] " + msg);
+    }
+}
+
+// Since shader changes are persisted outside of editor, we need to reset shaders once we leave.
+[KSPAddon(KSPAddon.Startup.FlightAndKSC, false)]
+public class NightShiftCleanup : MonoBehaviour
+{
+    public void Start()
+    {
+        AmbientManager shaderAmbientManager = new();
+        shaderAmbientManager.Reset();
     }
 }
