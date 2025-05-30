@@ -8,42 +8,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="10181fb0-0492-4479-8d12-9cc099be0da3" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/NightShift/Data/UvInfo.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.NightShift/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.NightShift/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Assets/Models/Lights_SPH3.mu" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Assets/Models/Lights_SPH3.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Assets/Textures/SPH_1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Assets/Textures/SPH_2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Assets/Textures/SPH_3.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Assets/Textures/VAB_1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Assets/Textures/VAB_3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/NightShift/Assets/Shaders/nightshift.shab" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/Assets/Shaders/nightshift.shab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/NightShift/Assets/Shaders/nightshift.shab.manifest" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/Assets/Shaders/nightshift.shab.manifest" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/NightShift/Data/AmbientLight.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/Data/AmbientLight.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Data/MeshTextureInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/Data/MeshTextureInfo.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/NightShift/Data/LightInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/Data/LightInfo.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/NightShift/Data/ShaderInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/Data/ShaderInfo.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Data/TimeMode.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/EditorTimeDisplay.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/NightShift/Data/UvInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/Data/UvInfo.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/NightShift/Managers/AmbientManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/Managers/AmbientManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Managers/Interface/IDayNightManager.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Managers/LightManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/Managers/LightManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Managers/ObjectManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/Managers/ObjectManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Managers/SkyboxManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/Managers/SkyboxManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Managers/WindowManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/Managers/WindowManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/NightShift.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/NightShift.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/NightShift.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/NightShift.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Utils/Editor.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/Utils/Editor.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Utils/Time.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/Utils/Time.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/Utils/Tools.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/Utils/Tools.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/_NightShiftShaders/Assets/Editor/BuildAssetBundle.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/_NightShiftShaders/Assets/Editor/BuildAssetBundle.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/_NightShiftShaders/Assets/Shaders/AmbientOverride/Bumped Specular.shader" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/_NightShiftShaders/Assets/Shaders/AmbientOverride/Diffuse Ground KSC Specular.shader" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/_NightShiftShaders/Assets/Shaders/AmbientOverride/Diffuse.shader" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/_NightShiftShaders/Assets/Shaders/AmbientOverride/Diffuse.shader" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/_NightShiftShaders/Assets/Shaders/AmbientOverride/Emissive_Specular.shader" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/_NightShiftShaders/Assets/Shaders/AmbientOverride/Emissive_SpecularBumped.shader" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/_NightShiftShaders/Assets/Shaders/AmbientOverride/Specular.shader" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/_NightShiftShaders/Assets/Shaders/Overlays/EmissiveLightmapper.shader" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/_NightShiftShaders/Assets/Shaders/Overlays/EmissiveLightmapper.shader" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/_NightShiftShaders/Assets/Shaders/SkyboxDynamic.shader" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/_NightShiftShaders/Assets/Shaders/SkyboxDynamic.shader" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/_NightShiftShaders/ProjectSettings/GraphicsSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/_NightShiftShaders/ProjectSettings/GraphicsSettings.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NightShift/_NightShiftShaders/ProjectSettings/ProjectSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/NightShift/_NightShiftShaders/ProjectSettings/ProjectSettings.asset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,8 +33,10 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/3020f90f960f433086d545c4e07afdfd531820/8f/7ecbddf4/List`1.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/4b449f2841f84227adfaad3149c8fdbaa4a800/0a/a825f787/Sun.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/4b449f2841f84227adfaad3149c8fdbaa4a800/aa/862ac73a/EditorFacility.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/coldrifting/Documents/Files/KSP/NightShift/NightShift/Data/AmbientLight.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/NightShift/Data/EditorType.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/NightShift/Data/MeshTextureInfo.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/coldrifting/Documents/Files/KSP/NightShift/NightShift/Managers/AmbientManager.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/NightShift/Managers/AmbientManager.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/NightShift/Managers/LightManager.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/NightShift/Managers/ObjectManager.cs" root0="FORCE_HIGHLIGHTING" />
@@ -70,8 +44,12 @@
     <setting file="file://$PROJECT_DIR$/NightShift/Managers/WindowManager.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/NightShift/NightShift.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/NightShift/Utils/Constants.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/coldrifting/Documents/Files/KSP/NightShift/NightShift/Utils/Editor.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/coldrifting/Documents/Files/KSP/NightShift/NightShift/Utils/Time.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/NightShift/Utils/Tools.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/NightShift/_NightShiftShaders/Assets/Editor/BuildAssetBundle.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/coldrifting/Documents/Files/KSP/NightShift/NightShift/_NightShiftShaders/Assets/Shaders/AmbientOverride/Diffuse.shader" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/coldrifting/Documents/Files/KSP/NightShift/NightShift/_NightShiftShaders/ProjectSettings/ProjectSettings.asset" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -161,6 +139,7 @@
       <workItem from="1748396056030" duration="15883000" />
       <workItem from="1748462984586" duration="13683000" />
       <workItem from="1748559339866" duration="14805000" />
+      <workItem from="1748580254660" duration="3919000" />
     </task>
     <task id="LOCAL-00001" summary="Huge project refactor.&#10;Added dynamic day night cycle with custom skybox shader.&#10;Replaced texture caching with custom shader to merge day and night textures.&#10;Made outside properly dark at night.&#10;Included Unity project.&#10;Mod now requires Shabby.&#10;Updated csproj for easier build process.&#10;Added debug mode to change visual time of day.">
       <option name="closed" value="true" />
@@ -178,7 +157,23 @@
       <option name="project" value="LOCAL" />
       <updated>1747909404740</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Improvements to shaders&#10;Switched to static approach for managers&#10;Improved project build setup for unity bundles">
+      <option name="closed" value="true" />
+      <created>1748580489197</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1748580489197</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Gitignore improvements">
+      <option name="closed" value="true" />
+      <created>1748580611897</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1748580611897</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -193,7 +188,9 @@
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
     <MESSAGE value="Huge project refactor.&#10;Added dynamic day night cycle with custom skybox shader.&#10;Replaced texture caching with custom shader to merge day and night textures.&#10;Made outside properly dark at night.&#10;Included Unity project.&#10;Mod now requires Shabby.&#10;Updated csproj for easier build process.&#10;Added debug mode to change visual time of day." />
     <MESSAGE value="Split time ffw/rewind enum into separate file" />
-    <option name="LAST_COMMIT_MESSAGE" value="Split time ffw/rewind enum into separate file" />
+    <MESSAGE value="Improvements to shaders&#10;Switched to static approach for managers&#10;Improved project build setup for unity bundles" />
+    <MESSAGE value="Gitignore improvements" />
+    <option name="LAST_COMMIT_MESSAGE" value="Gitignore improvements" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

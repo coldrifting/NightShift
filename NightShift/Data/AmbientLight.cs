@@ -13,7 +13,7 @@ public static class AmbientLight
     
     private static readonly Color TwilightSkyColor1 = new(0.06f, 0.03f, 0.0f);
     private static readonly Color TwilightSkyColor2 = new(0.15f, 0.2f, 0.25f);
-    private static readonly Color DaySkyColor = new(0.5f, 0.5f, 0.5f);
+    private static readonly Color DaySkyColor = Color.white;
     
     private static readonly Gradient AmbientLightGradient = new()
     {

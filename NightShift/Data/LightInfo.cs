@@ -10,10 +10,8 @@ public class LightInfo(EditorFacility facility, int level, float intensity, stri
     public readonly int Level = level;
     
     public readonly float Intensity = intensity;
-    public readonly string Path = path;
-    
-    public GameObject GameObject => Editor.RootInteriorObject?.transform.Find(Path)?.gameObject;
-    public Transform Transform => GameObject?.transform;
+
+    private GameObject GameObject => Editor.RootInteriorObject?.transform.Find(path)?.gameObject;
     public Light Light => GameObject ? GameObject?.GetComponent<Light>() : null;
 }
 

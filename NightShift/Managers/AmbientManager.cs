@@ -194,6 +194,7 @@ public static class AmbientManager
 		{"White_Concrete_blocks", ShaderInfo.ShaderMapLegacyBumpedDiffuse},
 		{"Window_gunk", ShaderInfo.ShaderMapDecalMultiply},
 		{"windows_props_apollo", ShaderInfo.ShaderMapDiffuse},
+		{"BurnMark", ShaderInfo.ShaderMapAlphaTranslucent},
     };
 
     private static readonly List<Material> Materials = [];
@@ -226,11 +227,19 @@ public static class AmbientManager
             if (material)
             {
                 material.SetColor(AmbientLightOverride, nightAmbientLight);
+                /*
                 if (FormatMaterialName(material.name) == "sph_apollo_interior_ground")
                 {
 	                // Override for SPH LVL1 concrete pad at entrance
-	                material.color = nightAmbientLight;
+	                float lum = (nightAmbientLight.r + nightAmbientLight.g + nightAmbientLight.b) / 3.0f;
+	                if (lum > 1)
+	                {
+		                lum = 1;
+	                }
+
+	                material.color = new(lum, lum, lum);
                 }
+                */
             }
         }
     }
