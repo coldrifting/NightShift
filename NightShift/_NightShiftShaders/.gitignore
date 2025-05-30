@@ -1,1 +1,6 @@
+# Unity Project Files
+Library/*
+Build/*
 Temp/*
+Assets/Testing/*
+Assets/Testing.meta
