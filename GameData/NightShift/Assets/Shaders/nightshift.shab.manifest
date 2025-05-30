@@ -1,0 +1,25 @@
+ManifestFileVersion: 0
+CRC: 2314334366
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: da62038e114496ee185a99d7ca1edb4b
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 55d48f4ad9c3b13330b9eb5ee5686477
+HashAppended: 0
+ClassTypes:
+- Class: 48
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Shaders/AmbientOverride/Flag.shader
+- Assets/Shaders/AmbientOverride/AlphaCutoff.shader
+- Assets/Shaders/AmbientOverride/Emissive.shader
+- Assets/Shaders/AmbientOverride/Bumped.shader
+- Assets/Shaders/AmbientOverride/KSC.shader
+- Assets/Shaders/Overlays/EmissiveLightmapper.shader
+- Assets/Shaders/SkyboxDynamic.shader
+- Assets/Shaders/AmbientOverride/AlphaTranslucent.shader
+- Assets/Shaders/AmbientOverride/Diffuse.shader
+Dependencies: []
