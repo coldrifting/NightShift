@@ -1,12 +1,11 @@
 ﻿using NightShift.Data;
-using NightShift.Managers.Interface;
 using NightShift.Utils;
 using UnityEngine;
 
 namespace NightShift.Managers;
 
 // Replaces skybox shader and textures, and adjusts fog settings
-internal class SkyboxManager : IDayNightManager
+internal static class SkyboxManager
 {
     private static readonly int FrontTex = Shader.PropertyToID("_FrontTex");
     private static readonly int BackTex = Shader.PropertyToID("_BackTex");
@@ -19,8 +18,16 @@ internal class SkyboxManager : IDayNightManager
     private static readonly int TimeOffset = Shader.PropertyToID("_TimeOffset");
     private static readonly int SunSize = Shader.PropertyToID("_SunSize");
 
-    public void Init()
+    public static void Init(double currentTime = 0.5f)
     {
+        // No need to apply if already applied
+        if (RenderSettings.skybox.shader.name == "NightShift/SkyboxDynamic")
+        {
+            int skyboxRotation = Editor.Facility == EditorFacility.SPH ? -60 : 0;
+            RenderSettings.skybox.SetFloat(Rotation, skyboxRotation);
+            return;
+        }
+        
         // Galaxy Cube Order: -X, +X, -Y, +Y, -Z, +Z
         Transform galaxy = GalaxyCubeControl.Instance.gameObject.transform;
         
@@ -61,12 +68,18 @@ internal class SkyboxManager : IDayNightManager
         skyboxMat.SetTexture(BackTex, galTex[4]);
         skyboxMat.SetTexture(FrontTex, galTex[5]);
 
+        RenderSettings.fogColor = AmbientLight.GetFogColor(currentTime);
+        
+        int rotation = Editor.Facility == EditorFacility.SPH ? -60 : 0;
+        skyboxMat.SetFloat(Rotation, rotation);
+        skyboxMat.SetFloat(TimeOffset, (float)((currentTime - 0.25f + 1.0f) * 360.0 % 360.0));
+        skyboxMat.SetFloat(SunSize, 2.0f);
+        
         RenderSettings.skybox = skyboxMat;
     }
 
-    public void Apply(double currentTime)
+    public static void Apply(double currentTime)
     {
-        // Adjust horizon fog
         RenderSettings.fogColor = AmbientLight.GetFogColor(currentTime);
         
         int rotation = Editor.Facility == EditorFacility.SPH ? -60 : 0;

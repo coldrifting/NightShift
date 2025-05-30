@@ -1,4 +1,4 @@
-Shader "NightShift/AmbientOverride/Diffuse"
+Shader "NightShift/AmbientOverride/AlphaCutoff"
 {
     // Uses a custom ambient light parameter and ignores reflections
     Properties
@@ -7,13 +7,16 @@ Shader "NightShift/AmbientOverride/Diffuse"
 
         _Color ("Color", Color) = (1.0, 1.0, 1.0, 1.0)
         _MainTex ("Color Map", 2D) = "gray" { }
+        _Cutoff ("Alpha cutoff", Range(0, 1)) = 0.5
     }
 
     SubShader
     {
         Tags
         {
-            "RenderType" = "Opaque"
+            "RenderType" = "TransparentCutout"
+            "IgnoreProjector" = "True"
+            "Queue" = "AlphaTest"
         }
 
         Stencil 
@@ -25,7 +28,7 @@ Shader "NightShift/AmbientOverride/Diffuse"
 
         CGPROGRAM
         #pragma vertex vert
-        #pragma surface surf StandardSpecular noambient nolightmap
+        #pragma surface surf StandardSpecular noambient nolightmap alphatest:_Cutoff
         #pragma shader_feature_local _SPECULARHIGHLIGHTS_OFF
         #pragma shader_feature_local _ENVIRONMENTREFLECTIONS_OFF
         #pragma target 3.0
@@ -34,8 +37,6 @@ Shader "NightShift/AmbientOverride/Diffuse"
 
         float4 _Color;
         sampler2D _MainTex;
-        sampler2D _Emissive;
-        float4 _EmissiveColor;
 
         struct Input
         {
@@ -54,11 +55,12 @@ Shader "NightShift/AmbientOverride/Diffuse"
             float4 finalColor = tex2D(_MainTex, i.uv_MainTex) * _Color;
 
             o.Albedo = finalColor;
+            o.Alpha = finalColor.a;
             o.Emission = o.Albedo * _AmbientLightOverride;
         }
 
         ENDCG
     }
 
-    FallBack "Diffuse"
+    FallBack "Legacy Shaders/Transparent/Cutout/Diffuse"
 }

@@ -1,20 +1,23 @@
 ﻿using System.Collections.Generic;
 using NightShift.Data;
-using NightShift.Managers.Interface;
+using NightShift.Utils;
 using UnityEngine;
+using Time = NightShift.Utils.Time;
 
 namespace NightShift.Managers;
 
 // Adjusts Lights
-public class LightManager : IDayNightManager
+public static class LightManager
 {
-    private readonly List<Material> _splashMaterials = [];
-    private readonly List<LightCache> _lights = [];
+    private static Transform _shadowLight;
+    
+    private static readonly List<Material> SplashMaterials = [];
+    private static readonly List<LightCache> Lights = [];
 
     private static readonly int TintColor = Shader.PropertyToID("_TintColor");
-    private readonly Color _defaultSplashColor = new(0.375f, 0.375f, 0.375f, 0.25f);
+    private static readonly Color DefaultSplashColor = new(0.375f, 0.375f, 0.375f, 0.25f);
     
-    public void Init()
+    public static void Init()
     {
         for (int i = 1; i <= 6; i++)
         {
@@ -28,7 +31,7 @@ public class LightManager : IDayNightManager
                     var mat = mr.material;
                     if (mat)
                     {
-                        _splashMaterials.Add(mat);
+                        SplashMaterials.Add(mat);
                     }
                 }
             }
@@ -46,14 +49,34 @@ public class LightManager : IDayNightManager
             new(EditorFacility.VAB, 1, 5f, "Day Lights/SpotlightSun"),
         ];
         
-        lightInfo.Initialize(_lights);
+        lightInfo.Initialize(Lights);
+
+        if (Editor.Facility == EditorFacility.SPH)
+        {
+            _shadowLight = Editor.Level switch
+            {
+                >= 3 => GameObject.Find("SPHmodern/Lighting_Realtime/Realtime_Shadow Light")?.transform,
+                2 => GameObject.Find("SPHlvl2/Editors_DayLights/Realtime_Shadow Light")?.transform,
+                _ => GameObject.Find("SPHlvl1/Editors_DayLights/Realtime_Shadow Light")?.transform
+            };
+        }
+
+        if (Editor.Facility == EditorFacility.VAB)
+        {
+            _shadowLight = Editor.Level switch
+            {
+                >= 3 => GameObject.Find("VABmodern/VAB_interior_modern/Day Lights/Shadow Light")?.transform,
+                2 => GameObject.Find("VABlvl3/Day Lights/Shadow Light")?.transform,
+                _ => GameObject.Find("VABlvl2/Day Lights/Shadow Light")?.transform
+            };
+        }
     }
 
-    public void Apply(double currentTime)
+    public static void Apply(double currentTime)
     {
         bool isNotNight = Time.GetTimeOfDay(currentTime) != TimeOfDay.Night;
         
-        foreach (LightCache lightData in _lights)
+        foreach (LightCache lightData in Lights)
         {
             lightData.Light.gameObject.SetActive(isNotNight);
             if (isNotNight)
@@ -62,9 +85,37 @@ public class LightManager : IDayNightManager
             }
         }
 
-        foreach (Material splashMaterial in _splashMaterials)
+        foreach (Material splashMaterial in SplashMaterials)
         {
-            splashMaterial.SetColor(TintColor, _defaultSplashColor * AmbientLight.GetLightIntensityFactor(currentTime));
+            splashMaterial.SetColor(TintColor, DefaultSplashColor * AmbientLight.GetLightIntensityFactor(currentTime));
+        }
+
+        if (_shadowLight)
+        {
+            double mirroredTime = Time.GetMirroredTime(currentTime);
+            float val = (float)((mirroredTime - Time.Twilight2) / (Time.DayStart - Time.Twilight2));
+            
+            if (Editor.Facility == EditorFacility.SPH)
+            {
+                float rotation = Tools.Lerp(25, 90, val);
+                _shadowLight.rotation = Editor.Level switch
+                {
+                    >= 3 => Quaternion.Euler(rotation, 0, 0),
+                    2 => Quaternion.Euler(rotation, 180, 0),
+                    _ => Quaternion.Euler(90, 0, 0)
+                };
+            }
+
+            if (Editor.Facility == EditorFacility.VAB)
+            {
+                float rotation = Tools.Lerp(55, 90, val);
+                _shadowLight.rotation = Editor.Level switch
+                {
+                    >= 3 => Quaternion.Euler(rotation, 270, 0),
+                    2 => Quaternion.Euler(rotation, 270, 0),
+                    _ => Quaternion.Euler(rotation, 270, 0)
+                };
+            }
         }
     }
 }

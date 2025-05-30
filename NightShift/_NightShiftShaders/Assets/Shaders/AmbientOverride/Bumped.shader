@@ -1,4 +1,4 @@
-Shader "NightShift/AmbientOverride/Diffuse"
+Shader "NightShift/AmbientOverride/Bumped"
 {
     // Uses a custom ambient light parameter and ignores reflections
     Properties
@@ -7,6 +7,7 @@ Shader "NightShift/AmbientOverride/Diffuse"
 
         _Color ("Color", Color) = (1.0, 1.0, 1.0, 1.0)
         _MainTex ("Color Map", 2D) = "gray" { }
+        _BumpMap ("Normal Map", 2D) = "bump" { }
     }
 
     SubShader
@@ -34,8 +35,7 @@ Shader "NightShift/AmbientOverride/Diffuse"
 
         float4 _Color;
         sampler2D _MainTex;
-        sampler2D _Emissive;
-        float4 _EmissiveColor;
+        sampler2D _BumpMap;
 
         struct Input
         {
@@ -54,6 +54,7 @@ Shader "NightShift/AmbientOverride/Diffuse"
             float4 finalColor = tex2D(_MainTex, i.uv_MainTex) * _Color;
 
             o.Albedo = finalColor;
+            o.Normal = UnpackNormalDXT5nm(tex2D(_BumpMap, i.uv_MainTex));
             o.Emission = o.Albedo * _AmbientLightOverride;
         }
 

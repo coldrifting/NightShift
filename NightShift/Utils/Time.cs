@@ -1,9 +1,16 @@
 ﻿using NightShift.Data;
 
-namespace NightShift;
+namespace NightShift.Utils;
 
 public static class Time
 {
+    public const float Midnight = 0.0f; 
+    public const float NightEnd = 0.24f; 
+    public const float Twilight1 = 0.25f; 
+    public const float Twilight2 = 0.26f; 
+    public const float DayStart = 0.28f; 
+    public const float MidDay   = 0.5f; 
+    
     public static float NextTimeOfDay(double currentTime)
     {
         return GetTimeOfDay(currentTime) switch
@@ -26,6 +33,11 @@ public static class Time
             <  0.22f or  > 0.78f => TimeOfDay.Night,
             _ => TimeOfDay.Day
         };
+    }
+
+    public static double GetMirroredTime(double currentTime)
+    {
+        return currentTime > 0.5 ? 1.0 - currentTime : currentTime;
     }
     
     public static double GetTime()

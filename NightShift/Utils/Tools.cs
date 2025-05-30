@@ -1,10 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace NightShift.Utils;
 
 public static class Tools
 {
+    public static float Lerp(float a, float b, float t)
+    {
+        t = Math.Max(Math.Min(t, 1f), 0f);
+
+        return t * a + ((1 - t) * b);
+    }
+    
     public static GameObject TryGetGameObjectFromPath(this Transform t, string path)
     {
         Transform tChild = t.Find(path);

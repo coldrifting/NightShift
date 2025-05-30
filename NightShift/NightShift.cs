@@ -1,11 +1,10 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
 using NightShift.Data;
 using NightShift.Managers;
-using NightShift.Managers.Interface;
 using NightShift.Utils;
+using Time = NightShift.Utils.Time;
 
 namespace NightShift;
 
@@ -13,42 +12,15 @@ namespace NightShift;
 public class NightShift : MonoBehaviour
 {
     private ApplicationLauncherButton _launcher;
-    private readonly List<IDayNightManager> _managers = [];
-    private EditorTimeDisplay _editorTimeDisplay;
-
-     // TODO - Poll periodically for changes
-    private double _currentTime = 0.5;
-    private double CurrentTime
-    {
-        get => _currentTime;
-        set => _currentTime = (value + 1) % 1.0;
-    }
 
     private const ControlTypes LockMask = ControlTypes.EDITOR_GIZMO_TOOLS | ControlTypes.KEYBOARDINPUT;
-    private KeyBinding _cycleTimeOfDay;
-    
-    private KeyBinding _setVisualTimeBack;
-    private KeyBinding _setVisualTimeForward;
-    private KeyBinding _setVisualTimeStop;
+    private static KeyBinding _cycleTimeOfDay;
 
-    private TimeMode _timeMode = TimeMode.Pause;
-    private double _timeScale = 0.0625;
-
-    private Coroutine _timeAdvance = null;
+    private static double _visualTime = 0.5f;
 
     public IEnumerator Start()
     {
         _cycleTimeOfDay = new(KeyCode.N, LockMask);
-
-        _setVisualTimeBack = new(KeyCode.Comma, LockMask);
-        _setVisualTimeForward = new(KeyCode.Period, LockMask);
-        _setVisualTimeStop = new(KeyCode.Slash, LockMask);
-        
-        _managers.Add(new SkyboxManager());
-        _managers.Add(new AmbientManager());
-        _managers.Add(new LightManager());
-        _managers.Add(new ObjectManager());
-        _managers.Add(new WindowManager());
         
         // Add the launcher
         GameEvents.onGUIApplicationLauncherReady.Add(AddLauncher);
@@ -56,33 +28,33 @@ public class NightShift : MonoBehaviour
         
         // Callback for editor switching
         GameEvents.onEditorRestart.Add(OnStartup);
-
-        _editorTimeDisplay = new();
         
-        CurrentTime = Time.GetTime();
+        _visualTime = Time.GetTime();
 
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(0.05f);
         
         Init();
         Refresh();
-                    
-        _timeAdvance = StartCoroutine(AdvanceTime());
     }
 
     public void Init()
     {
-        foreach (var manager in _managers)
-        {
-            manager.Init();
-        }
+        SkyboxManager.Init(_visualTime);
+        
+        AmbientManager.Init();
+        LightManager.Init();
+        ObjectManager.Init();
+        WindowManager.Init();
+        UvInfo.Init();
     }
     
     public void Apply(double timeOfDay)
     {
-        foreach (var manager in _managers)
-        {
-            manager.Apply(timeOfDay);
-        }
+        SkyboxManager.Apply(timeOfDay);
+        AmbientManager.Apply(timeOfDay);
+        LightManager.Apply(timeOfDay);
+        ObjectManager.Apply(timeOfDay);
+        WindowManager.Apply(timeOfDay);
     }
 
     public void Update()
@@ -93,43 +65,6 @@ public class NightShift : MonoBehaviour
             {
                 CycleTimeOfDay();
             }
-            else if (_setVisualTimeStop.GetKeyDown())
-            {
-                _timeMode = TimeMode.Pause;
-            }
-            else if (_setVisualTimeBack.GetKeyDown())
-            {
-                _timeMode = _timeMode.Prev();
-            }
-            else if (_setVisualTimeForward.GetKeyDown())
-            {
-                _timeMode = _timeMode.Next();
-            }
-        }
-    }
-
-    private IEnumerator AdvanceTime()
-    {
-        while (true)
-        {  
-            CurrentTime = _timeMode switch
-            {
-                TimeMode.ReReWind => CurrentTime - UnityEngine.Time.deltaTime * _timeScale * 4,
-                TimeMode.Rewind => CurrentTime - UnityEngine.Time.deltaTime * _timeScale * 2,
-                TimeMode.Back => CurrentTime - UnityEngine.Time.deltaTime * _timeScale,
-                TimeMode.Forward => CurrentTime + UnityEngine.Time.deltaTime * _timeScale,
-                TimeMode.FastForward => CurrentTime + UnityEngine.Time.deltaTime * _timeScale * 2,
-                TimeMode.FastFastForward => CurrentTime + UnityEngine.Time.deltaTime * _timeScale * 4,
-                _ => CurrentTime
-            };
-            
-            _editorTimeDisplay.Update(_timeMode, CurrentTime);
-            if (_timeMode != TimeMode.Pause)
-            {
-                Refresh();
-            }
-            
-            yield return new WaitForEndOfFrame();
         }
     }
 
@@ -147,7 +82,7 @@ public class NightShift : MonoBehaviour
         
         StartCoroutine(WaitThenRefresh());
     }
-
+    
     private IEnumerator WaitThenRefresh(float timeToWait = 0.1f)
     {
         yield return new WaitForSeconds(timeToWait);
@@ -157,7 +92,7 @@ public class NightShift : MonoBehaviour
 
     private void Refresh()
     {
-        Apply(CurrentTime);
+        Apply(_visualTime);
         
         // Update Launcher Icon
         Texture2D icon = GetAppIcon();
@@ -166,7 +101,7 @@ public class NightShift : MonoBehaviour
 
     private Texture2D GetAppIcon()
     {
-        return Time.GetTimeOfDay(CurrentTime) switch
+        return Time.GetTimeOfDay(_visualTime) switch
         {
             TimeOfDay.Dawn => Constants.AppIconDawn,
             TimeOfDay.Day => Constants.AppIconDay,
@@ -202,7 +137,7 @@ public class NightShift : MonoBehaviour
 
     private void CycleTimeOfDay()
     {
-        CurrentTime = Time.NextTimeOfDay(CurrentTime);
+        _visualTime = Time.NextTimeOfDay(_visualTime);
         
         Refresh();
 
@@ -227,7 +162,7 @@ public class NightShiftCleanup : MonoBehaviour
 {
     public void Start()
     {
-        AmbientManager shaderAmbientManager = new();
-        shaderAmbientManager.Reset();
+        AmbientManager.Init();
+        AmbientManager.Reset();
     }
 }

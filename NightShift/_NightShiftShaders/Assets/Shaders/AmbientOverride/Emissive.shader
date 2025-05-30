@@ -1,4 +1,4 @@
-Shader "NightShift/AmbientOverride/Diffuse"
+Shader "NightShift/AmbientOverride/Emissive"
 {
     // Uses a custom ambient light parameter and ignores reflections
     Properties
@@ -7,6 +7,8 @@ Shader "NightShift/AmbientOverride/Diffuse"
 
         _Color ("Color", Color) = (1.0, 1.0, 1.0, 1.0)
         _MainTex ("Color Map", 2D) = "gray" { }
+        _Emissive ("Emissive Map", 2D) = "white" { }
+        _EmissiveColor ("Emissive Color", Color) = (0.0, 0.0, 0.0, 1.0)
     }
 
     SubShader
@@ -52,9 +54,10 @@ Shader "NightShift/AmbientOverride/Diffuse"
         void surf(Input i, inout SurfaceOutputStandardSpecular o)
         {
             float4 finalColor = tex2D(_MainTex, i.uv_MainTex) * _Color;
+            float4 emissiveTotal = tex2D(_Emissive, i.uv_MainTex) * _EmissiveColor;
 
             o.Albedo = finalColor;
-            o.Emission = o.Albedo * _AmbientLightOverride;
+            o.Emission = (o.Albedo * _AmbientLightOverride) + emissiveTotal;
         }
 
         ENDCG

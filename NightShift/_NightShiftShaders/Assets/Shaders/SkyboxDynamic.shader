@@ -1,15 +1,13 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
 Shader "NightShift/SkyboxDynamic"
 {
     Properties
     {
-        [NoScaleOffset] _FrontTex ("Front [+Z]",2D)="grey" { }
-        [NoScaleOffset] _BackTex ("Back [-Z]",2D)="grey" { }
-        [NoScaleOffset] _LeftTex ("Left [+X]",2D)="grey" { }
-        [NoScaleOffset] _RightTex ("Right [-X]",2D)="grey" { }
-        [NoScaleOffset] _UpTex ("Up [+Y]",2D)="grey" { }
-        [NoScaleOffset] _DownTex ("Down [-Y]",2D)="grey" { }
+        [NoScaleOffset] _FrontTex ("Front [+Z]",2D)="black" { }
+        [NoScaleOffset] _BackTex ("Back [-Z]",2D)="black" { }
+        [NoScaleOffset] _LeftTex ("Left [+X]",2D)="black" { }
+        [NoScaleOffset] _RightTex ("Right [-X]",2D)="black" { }
+        [NoScaleOffset] _UpTex ("Up [+Y]",2D)="black" { }
+        [NoScaleOffset] _DownTex ("Down [-Y]",2D)="black" { }
 
         _Rotation ("_Rotation", Range(0.0, 360.0)) = 0.0
         _TimeOffset ("_TimeOffset", Range(0.0, 720.0)) = 0.0
@@ -77,7 +75,8 @@ Shader "NightShift/SkyboxDynamic"
             float Hm = 1200; // Mie Scale Height
             float g = 0.75; // Mie preferred scattering direction
             
-            float3 rayOrigin = float3(0, earthRadius + 50, 0);
+            // Negative value removes hard cutoff horizon line for some reason
+            float3 rayOrigin = float3(0, earthRadius + -50, 0);
 
             int iSteps = 16;
             int jSteps = 8; 
@@ -268,32 +267,20 @@ Shader "NightShift/SkyboxDynamic"
         {
             float4 vertex : POSITION;
             float2 texcoord : TEXCOORD0;
-            //UNITY_VERTEX_INPUT_INSTANCE_ID
         };
         struct v2f
         {
             float4 vertex : SV_POSITION0;
             float3 worldPos : TEXCOORD0;
             float2 texcoord : TEXCOORD1;
-            float timeOffset: PSIZE0;
-            float sunHeight: PSIZE1;
-            //UNITY_VERTEX_OUTPUT_STEREO
         };
 
         v2f vert(appdata_t v)
         {
             v2f o;
-            //UNITY_SETUP_INSTANCE_ID(v);
-            //UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
-
-            o.timeOffset = _TimeOffset % 360;
-            o.sunHeight = ((o.timeOffset + 90) % 360) - 90;
-            if (o.timeOffset > 90 && o.timeOffset < 270) {
-                o.sunHeight = 180 - o.timeOffset;
-            }
 
             // Rotate skybox background
-            float3 rotated = RotateAroundZXYInDegrees(v.vertex, float3(_Rotation + 90, o.timeOffset, 90));
+            float3 rotated = RotateAroundZXYInDegrees(v.vertex, float3(_Rotation + 90, _TimeOffset % 360.0, 90));
             o.vertex = UnityObjectToClipPos(rotated);
 
             o.worldPos = mul (unity_ObjectToWorld, rotated);
@@ -307,8 +294,8 @@ Shader "NightShift/SkyboxDynamic"
             return 1.0 - exp(-1.0 * layer);
         }
 
-        float3 overlay(float3 base, float4 overlay) {
-            return clamp((overlay * overlay.a) + ((1 - overlay.a) * base), 0, 1);
+        float3 overlay(float3 bottom, float4 top) {
+            return clamp((top.rgb * top.a) + ((1 - top.a) * bottom.rgb), 0, 1);
         }
 
         float3 skybox_frag(v2f i, sampler2D smp, bool flip)
@@ -319,23 +306,32 @@ Shader "NightShift/SkyboxDynamic"
                 texcoord = float2(i.texcoord.x * -1, i.texcoord.y * -1);
             }
             float3 stars = tex2D(smp, texcoord);
-            stars = stars * stars;
+            float3 brightStars = (clamp(stars, 0.5, 1) - 0.5) * 2;
+            stars = clamp((stars * 0.2) + (brightStars * 0.5), 0, 1);
 
-            float starsDaylightMask = 1 - clamp((i.sunHeight + 5) / 10, 0, 1);
-            float starsFadeMask = 1 - clamp((i.sunHeight + 20) / 20, 0, 1);
+            float timeOffset = (_TimeOffset + 360.0) % 360.0;
+            float sunHeight = ((timeOffset + 90) % 360) - 90;
+            if (timeOffset > 90 && timeOffset < 270) {
+                sunHeight = 180 - timeOffset;
+            }
+
+            float starsDaylightMask = 1 - clamp((sunHeight + 5.0) / 10.0, 0, 1);
+            float starsFadeMask = 1 - clamp((sunHeight + 20) / 20, 0, 1);
             float3 starsWithMask = stars * lerp(starsFadeMask * starsFadeMask, 1 * stars, stars) * starsDaylightMask;
 
-            float3 sunDir = getSunDir(i.timeOffset);
+            float3 sunDir = getSunDir(timeOffset);
             float3 atmo = tonemap(atmosphere(normalize(i.worldPos), sunDir));
-            float4 sun = sunDisc(sunDir, normalize(i.worldPos), i.sunHeight);
+            float4 sun = sunDisc(sunDir, normalize(i.worldPos), sunHeight);
 
             float3 atmoWithStars = starsWithMask + atmo - starsWithMask * atmo;
 
-            float horizonMask = mapRange(normalize(i.worldPos).y, -0.03, 1, -0.01, 0);
+            float horizonMask = mapRange(normalize(i.worldPos).y, -0.015, 1, -0.0125, 0);
 
             float4 horizon = horizonMask * unity_FogColor.rgba;
+            float3 skies = overlay(atmoWithStars, sun);
+            skies *= (1 - horizonMask);
 
-            return overlay(overlay(atmoWithStars, sun) * (1 - horizonMask), horizon);
+            return overlay(skies, horizon);
         }
         ENDCG
 
@@ -344,7 +340,6 @@ Shader "NightShift/SkyboxDynamic"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma target 2.0
             sampler2D _FrontTex;
 
             float3 frag(v2f i) : SV_Target
@@ -359,7 +354,6 @@ Shader "NightShift/SkyboxDynamic"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma target 2.0
             sampler2D _BackTex;
 
             float3 frag(v2f i) : SV_Target
@@ -374,7 +368,6 @@ Shader "NightShift/SkyboxDynamic"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma target 2.0
             sampler2D _LeftTex;
 
             float3 frag(v2f i) : SV_Target
@@ -389,7 +382,6 @@ Shader "NightShift/SkyboxDynamic"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma target 2.0
             sampler2D _RightTex;
 
             float3 frag(v2f i) : SV_Target
@@ -404,7 +396,6 @@ Shader "NightShift/SkyboxDynamic"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma target 2.0
             sampler2D _UpTex;
 
             float3 frag(v2f i) : SV_Target
@@ -419,7 +410,6 @@ Shader "NightShift/SkyboxDynamic"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma target 2.0
             sampler2D _DownTex;
 
             float3 frag(v2f i) : SV_Target

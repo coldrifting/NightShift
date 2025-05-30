@@ -111,10 +111,8 @@
     <Compile Include="Data\LightInfo.cs" />
     <Compile Include="Data\ShaderInfo.cs" />
     <Compile Include="Data\MeshTextureInfo.cs" />
-    <Compile Include="Data\TimeMode.cs" />
     <Compile Include="Data\TimeOfDay.cs" />
-    <Compile Include="EditorTimeDisplay.cs" />
-    <Compile Include="Managers\Interface\IDayNightManager.cs" />
+    <Compile Include="Data\UvInfo.cs" />
     <Compile Include="Managers\LightManager.cs" />
     <Compile Include="Managers\ObjectManager.cs" />
     <Compile Include="Managers\AmbientManager.cs" />
@@ -131,8 +129,6 @@
     <PostBuildEvent>
       xcopy "$(TargetDir)$(ProjectName).dll" "$(ReferencePath)\GameData\$(ProjectName)\"  /F /R /Y /I
       xcopy "$(ProjectDir)\Assets"           "$(ReferencePath)\GameData\$(ProjectName)\Assets" /S /F /R /Y /I
-      xcopy "$(ProjectDir)\_NightShiftShaders\Build\nightshift"           "$(ReferencePath)\GameData\$(ProjectName)\Assets\Shaders\nightshift.shab" /F /R /Y /I
-      xcopy "$(ProjectDir)\_NightShiftShaders\Build\nightshift.manifest"           "$(ReferencePath)\GameData\$(ProjectName)\Assets\Shaders\nightshift.shab.manifest" /F /R /Y /I
     </PostBuildEvent>
   </PropertyGroup>
 </Project>

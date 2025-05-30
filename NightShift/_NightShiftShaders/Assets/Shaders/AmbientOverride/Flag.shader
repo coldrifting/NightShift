@@ -1,4 +1,4 @@
-Shader "NightShift/AmbientOverride/Diffuse"
+Shader "NightShift/AmbientOverride/Flag"
 {
     // Uses a custom ambient light parameter and ignores reflections
     Properties
@@ -6,21 +6,21 @@ Shader "NightShift/AmbientOverride/Diffuse"
         _AmbientLightOverride ("AmbientLightOverride", Color) = (1, 1, 1, 1)
 
         _Color ("Color", Color) = (1.0, 1.0, 1.0, 1.0)
-        _MainTex ("Color Map", 2D) = "gray" { }
+        _MainTex ("MainTex", 2D) = "gray" {}
     }
 
     SubShader
     {
-        Tags
-        {
+        Tags 
+        { 
             "RenderType" = "Opaque"
         }
 
-        Stencil 
-        { 
-            Ref 3 
-            Comp Always 
-            Pass Replace 
+        Stencil
+        {
+            Ref 3
+            Comp Always
+            Pass Replace
         }
 
         CGPROGRAM
@@ -34,8 +34,6 @@ Shader "NightShift/AmbientOverride/Diffuse"
 
         float4 _Color;
         sampler2D _MainTex;
-        sampler2D _Emissive;
-        float4 _EmissiveColor;
 
         struct Input
         {
@@ -49,9 +47,14 @@ Shader "NightShift/AmbientOverride/Diffuse"
             o.uv_MainTex = v.texcoord;
         }
 
+        float3 overlay(float3 base, float4 overlay) {
+            return clamp((overlay * overlay.a) + ((1 - overlay.a) * base), 0, 1);
+        }
+
         void surf(Input i, inout SurfaceOutputStandardSpecular o)
         {
-            float4 finalColor = tex2D(_MainTex, i.uv_MainTex) * _Color;
+            float4 detail = tex2D(_MainTex, i.uv_MainTex);
+            float3 finalColor = overlay(_Color, detail);
 
             o.Albedo = finalColor;
             o.Emission = o.Albedo * _AmbientLightOverride;
@@ -59,6 +62,5 @@ Shader "NightShift/AmbientOverride/Diffuse"
 
         ENDCG
     }
-
-    FallBack "Diffuse"
+    Fallback "Diffuse"
 }
